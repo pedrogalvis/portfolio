@@ -1,44 +1,63 @@
 <?php
-	if (isset($_POST["submit"])) {
-		$name = $_POST['name'];
-		$email = $_POST['email'];
-		$message = $_POST['message'];
-		$human = intval($_POST['human']);
-		$from = $email; 
-		
-		// WARNING: Be sure to change this. This is the address that the email will be sent to
-		$to = 'pedro.galvis.talento.tech@usa.edu.co'; 
-		
-		$subject = "Message from ".$name." ";
-		
-		$body = "From: $name\n E-Mail: $email\n Message:\n $message";
- 
-		// Check if name has been entered
-		if (!$_POST['name']) {
-			$errName = 'Please enter your name';
-		}
-		
-		// Check if email has been entered and is valid
-		if (!$_POST['email'] || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-			$errEmail = 'Please enter a valid email address';
-		}
-		
-		//Check if message has been entered
-		if (!$_POST['message']) {
-			$errMessage = 'Please enter your message';
-		}
-		//Check if simple anti-bot test is correct
-		if ($human !== 5) {
-			$errHuman = 'Your anti-spam is incorrect';
-		}
- 
-// If there are no errors, send the email
-if (!$errName && !$errEmail && !$errMessage && !$errHuman) {
-	if (mail ($to, $subject, $body, $from)) {
-		$result='<div class="alert alert-success">Thank You! I will be in touch</div>';
-	} else {
-		$result='<div class="alert alert-danger">Sorry there was an error sending your message. Please try again later</div>';
-	}
+// Inicializa las variables
+$name = $email = $message = $human = "";
+$errName = $errEmail = $errMessage = $errHuman = "";
+$result = "";
+
+// Verifica si el formulario ha sido enviado
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Valida el nombre
+    if (empty($_POST["name"])) {
+        $errName = "Please enter your name";
+    } else {
+        $name = test_input($_POST["name"]);
+    }
+
+    // Valida el correo electrónico
+    if (empty($_POST["email"])) {
+        $errEmail = "Please enter your email address";
+    } elseif (!filter_var($_POST["email"], FILTER_VALIDATE_EMAIL)) {
+        $errEmail = "Invalid email format";
+    } else {
+        $email = test_input($_POST["email"]);
+    }
+
+    // Valida el mensaje
+    if (empty($_POST["message"])) {
+        $errMessage = "Please enter your message";
+    } else {
+        $message = test_input($_POST["message"]);
+    }
+
+    // Valida la respuesta humana
+    if (empty($_POST["human"])) {
+        $errHuman = "Please answer the question";
+    } elseif ($_POST["human"] != 5) {
+        $errHuman = "Incorrect answer";
+    } else {
+        $human = test_input($_POST["human"]);
+    }
+
+    // Si no hay errores, procesa los datos
+    if ($errName == "" && $errEmail == "" && $errMessage == "" && $errHuman == "") {
+        $to = "pedro.galvis.talentotech@usa.edu.co"; // Cambia esto por tu dirección de correo
+        $subject = "Contact Form Submission";
+        $body = "Name: $name\nEmail: $email\nMessage:\n$message";
+        $headers = "From: $email";
+
+        if (mail($to, $subject, $body, $headers)) {
+            $result = "<p class='text-success'>Message sent successfully!</p>";
+        } else {
+            $result = "<p class='text-danger'>Sorry, there was an error sending your message. Please try again later.</p>";
+        }
+    }
 }
-	}
+
+// Función para limpiar los datos de entrada
+function test_input($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
 ?>
